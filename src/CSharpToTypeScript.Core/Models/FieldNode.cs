@@ -21,15 +21,18 @@ namespace CSharpToTypeScript.Core.Models
         public IEnumerable<string> Requires => Type.Requires;
 
         public string WriteTypeScript(CodeConversionOptions options, Context context)
-            => // name
+            => // name            
             (JsonPropertyName?
                 .EscapeBackslashes()
                 .EscapeQuotes(options.QuotationMark)
                 .TransformIf(!JsonPropertyName.IsValidIdentifier(), StringUtilities.InQuotes(options.QuotationMark))
             ?? Name.TransformIf(options.ToCamelCase, StringUtilities.ToCamelCase))
+            + (options.AddStronglyTyped ?
             // separator
-            + "?".If(Type.IsOptional(options, out _)) + ": "
+            ("?".If(Type.IsOptional(options, out _)) + ": "
             // type
-            + (Type.IsOptional(options, out var of) ? of.WriteTypeScript(options, context) : Type.WriteTypeScript(options, context)) + ";";
+            + (Type.IsOptional(options, out var of) ? of.WriteTypeScript(options, context) : Type.WriteTypeScript(options, context)))
+            : "")
+            + ";";
     }
 }

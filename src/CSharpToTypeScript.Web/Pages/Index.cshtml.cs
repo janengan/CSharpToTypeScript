@@ -104,7 +104,15 @@ namespace CSharpToTypeScript.Web.Pages
 
             PreviousInputCode = InputCode;
 
-            ConvertedCode = _codeConverter.ConvertToTypeScript(InputCode ?? string.Empty, Settings.MapToCodeConversionOptions());
+            var options = Settings.MapToCodeConversionOptions();
+
+            options.OutputType = OutputType.Interface;
+
+            ConvertedCode = _codeConverter.ConvertToTypeScript(InputCode ?? string.Empty, options);
+
+            options.OutputType = OutputType.Class;
+
+            ConvertedCode += _codeConverter.ConvertToTypeScript(InputCode ?? string.Empty, options);
 
             return RedirectToPage();
         }

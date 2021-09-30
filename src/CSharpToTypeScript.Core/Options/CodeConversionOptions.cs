@@ -36,5 +36,6 @@ namespace CSharpToTypeScript.Core.Options
         public bool StringEnums { get; set; }
         public bool EnumStringToCamelCase { get; set; }
         public OutputType OutputType { get; set; }
+        public bool AddStronglyTyped { get; set; } = true;
     }
 }

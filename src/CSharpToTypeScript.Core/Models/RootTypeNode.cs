@@ -37,21 +37,47 @@ namespace CSharpToTypeScript.Core.Models
             context = context.Clone();
             context.GenericTypeParameters = GenericTypeParameters;
 
+            var className = Name.TransformIf(options.RemoveInterfacePrefix, StringUtilities.RemoveInterfacePrefix);
+
+            if (options.OutputType == OutputType.Class)
+            {
+                className = className.Replace("Model", "");
+            }
+
             // keywords
-            return "export ".If(options.Export)
+            var classFile = "export ".If(options.Export)
                 // type
                 + (!FromInterface && options.OutputType == OutputType.Class ? "class" : "interface") + " "
                 // name
-                + Name.TransformIf(options.RemoveInterfacePrefix, StringUtilities.RemoveInterfacePrefix)
+                + className
                 // generic type parameters
                 + ("<" + GenericTypeParameters.ToCommaSepratedList() + ">").If(GenericTypeParameters.Any())
                 // base types
                 + (" extends " + BaseTypes.WriteTypeScript(options, context).ToCommaSepratedList()).If(BaseTypes.Any())
                 // body
                 + " {" + NewLine
+                + (options.OutputType == OutputType.Interface
                 // fields
-                + Fields.WriteTypeScript(options, context).Indent(options.UseTabs, options.TabSize).LineByLine() + NewLine
-                + "}";
+                ? (Fields.WriteTypeScript(options, context).Indent(options.UseTabs, options.TabSize).LineByLine() + NewLine)
+                : ("   constructor(" + NewLine
+                + Fields.WriteTypeScript(options, context).PrefixText("public ").ReplaceText(";", ",").Indent(true, options.TabSize * 2).LineByLine() + NewLine
+                + "    ){}"));
+
+            if(options.OutputType == OutputType.Class)
+            {
+                options.AddStronglyTyped = false;
+                classFile += EmptyLine + $"    static fromJson(dto: {Name.TransformIf(options.RemoveInterfacePrefix, StringUtilities.RemoveInterfacePrefix)}): {className}";
+                classFile += " {";
+                classFile += NewLine + $"        return new {className}(" ;                
+                classFile += NewLine + Fields.WriteTypeScript(options, context).PrefixText("dto.").ReplaceText(";", ",").Indent(true, options.TabSize * 2).LineByLine() + NewLine;
+                classFile += NewLine + "       );";
+                classFile += NewLine + "    }";
+            }
+
+            classFile += NewLine + "}"
+                + EmptyLine;
+
+            return classFile;
         }
     }
 }

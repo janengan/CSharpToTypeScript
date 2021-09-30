@@ -93,5 +93,11 @@ namespace CSharpToTypeScript.Core.Utilities
             => Regex.Replace(text, @"\r?\n", NewLine);
 
         public static string EmptyLine => NewLine.Repeat(2);
+
+        public static IEnumerable<string> PrefixText(this IEnumerable<string> texts, string prefix)
+            => texts.Select(t => prefix + t);
+
+        public static IEnumerable<string> ReplaceText(this IEnumerable<string> texts, string replaceThis, string withThis)
+            => texts.Select(t => t.Replace(replaceThis, withThis));
     }
 }

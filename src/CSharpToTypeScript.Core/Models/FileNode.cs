@@ -24,18 +24,29 @@ namespace CSharpToTypeScript.Core.Models
         {
             var context = new Context();
 
-            return // imports
-                (Imports.Select(i =>
+            switch (options.OutputType)
+            {
+                case OutputType.Interface:
+                    return (Imports.Select(i =>
                         // type
                         "import { " + i.TransformIf(options.RemoveInterfacePrefix, StringUtilities.RemoveInterfacePrefix) + " }"
                         // module
                         + " from " + ("./" + ModuleNameTransformation.Transform(i, options)).InQuotes(options.QuotationMark) + ";")
                     .Distinct().LineByLine()
+
                 + EmptyLine).If(Imports.Any() && options.ImportGenerationMode != ImportGenerationMode.None)
                 // types
                 + RootNodes.WriteTypeScript(options, context).ToEmptyLineSeparatedList()
                 // empty line at the end
                 + NewLine.If(options.AppendNewLine);
+
+                case OutputType.Class:
+                    return  RootNodes.WriteTypeScript(options, context).ToEmptyLineSeparatedList()
+               // empty line at the end
+               + NewLine.If(options.AppendNewLine);
+                default:
+                    return "";
+            }
         }
     }
 }
